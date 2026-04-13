@@ -51,6 +51,8 @@ function getWatch(watchId) {
   return db.getWatch(watchId);
 }
 
+const PENDING_TTL = 15 * 60 * 1000; // 15 minutes
+
 function createPendingSearch({ guild_id, channel_id, user_id, query }) {
   const id = `p${++pendingIdCounter}`;
   pendingSearches.set(id, {
@@ -58,9 +60,20 @@ function createPendingSearch({ guild_id, channel_id, user_id, query }) {
     min_price: null, max_price: null, size: null,
     condition: null, category: null, message_id: null,
     active: 0, seeded: 0,
+    _createdAt: Date.now(),
   });
   return id;
 }
+
+// Clean up stale pending searches every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, search] of pendingSearches) {
+    if (now - search._createdAt > PENDING_TTL) {
+      pendingSearches.delete(id);
+    }
+  }
+}, 5 * 60 * 1000);
 
 function updateFilters(watchId, filters) {
   if (typeof watchId === 'string' && watchId.startsWith('p')) {
@@ -567,7 +580,7 @@ function updateOriginalMessage(interaction, watchId) {
   if (!watch?.message_id || !interaction.channel) return;
   interaction.channel.messages.fetch(watch.message_id)
     .then(msg => msg.edit(buildWatchMessage(watchId)))
-    .catch(() => {});
+    .catch(err => console.error(`[Buttons] Failed to update original message:`, err.message));
 }
 
 async function updateMainMessage(interaction, watchId) {
