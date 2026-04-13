@@ -583,33 +583,6 @@ function updateOriginalMessage(interaction, watchId) {
     .catch(err => console.error(`[Buttons] Failed to update original message:`, err.message));
 }
 
-async function updateMainMessage(interaction, watchId) {
-  const watch = db.getWatch(watchId);
-  if (!watch) return;
-
-  const updated = buildWatchMessage(watchId);
-
-  // Update the original channel message if it exists
-  if (watch.message_id && interaction.channel) {
-    try {
-      const msg = await interaction.channel.messages.fetch(watch.message_id);
-      await msg.edit(updated);
-    } catch {}
-  }
-
-  // Also update the current message back to the filter embed
-  // (this handles the case where we used interaction.update() to show a dropdown)
-  try {
-    if (interaction.message) {
-      await interaction.message.edit(updated);
-    }
-  } catch {}
-
-  try {
-    await interaction.deleteReply();
-  } catch {}
-}
-
 async function handleModal(interaction) {
   const [, watchIdStr] = interaction.customId.split('_');
   const watchId = parseWatchId(watchIdStr);
