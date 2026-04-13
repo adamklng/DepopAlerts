@@ -297,7 +297,7 @@ async function handleButton(interaction) {
   if (customId.startsWith('sizeclear_')) {
     const watchId = parseWatchId(customId.split('_')[1]);
     const watch = getWatch(watchId);
-    if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+    if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
     updateFilters(watchId, { minPrice: watch.min_price, maxPrice: watch.max_price, size: null, condition: watch.condition, category: watch.category });
     await interaction.update(buildWatchMessage(watchId));
     updateOriginalMessage(interaction, watchId);
@@ -307,7 +307,7 @@ async function handleButton(interaction) {
   if (customId.startsWith('catclear_')) {
     const watchId = parseWatchId(customId.split('_')[1]);
     const watch = getWatch(watchId);
-    if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+    if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
     updateFilters(watchId, { minPrice: watch.min_price, maxPrice: watch.max_price, size: watch.size, condition: watch.condition, category: null });
     await interaction.update(buildWatchMessage(watchId));
     updateOriginalMessage(interaction, watchId);
@@ -317,7 +317,7 @@ async function handleButton(interaction) {
   if (customId.startsWith('condclear_')) {
     const watchId = parseWatchId(customId.split('_')[1]);
     const watch = getWatch(watchId);
-    if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+    if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
     updateFilters(watchId, { minPrice: watch.min_price, maxPrice: watch.max_price, size: watch.size, condition: null, category: watch.category });
     await interaction.update(buildWatchMessage(watchId));
     updateOriginalMessage(interaction, watchId);
@@ -327,7 +327,7 @@ async function handleButton(interaction) {
   if (customId.startsWith('priceclear_')) {
     const watchId = parseWatchId(customId.split('_')[1]);
     const watch = getWatch(watchId);
-    if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+    if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
     updateFilters(watchId, { minPrice: null, maxPrice: null, size: watch.size, condition: watch.condition, category: watch.category });
     await interaction.update(buildWatchMessage(watchId));
     updateOriginalMessage(interaction, watchId);
@@ -588,7 +588,7 @@ async function handleModal(interaction) {
   const [, watchIdStr] = interaction.customId.split('_');
   const watchId = parseWatchId(watchIdStr);
   const watch = getWatch(watchId);
-  if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+  if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
 
   const rawMin = interaction.fields.getTextInputValue('min_price').trim();
   const rawMax = interaction.fields.getTextInputValue('max_price').trim();
@@ -691,7 +691,7 @@ async function handleSelectMenu(interaction) {
   const type = parts[0];
   const watchId = parseWatchId(parts[1]);
   const watch = getWatch(watchId);
-  if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+  if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
 
   const value = interaction.values[0];
 
