@@ -85,7 +85,7 @@ async function searchDepop(query, filters = {}) {
     });
 
     if (rawProducts && rawProducts.length > 0) {
-      const products = rawProducts.map(p => {
+      const products = rawProducts.filter(p => p.slug).map(p => {
         const price = p.pricing?.original_price?.price_breakdown?.price?.amount;
         const currency = p.pricing?.currency_name === 'USD' ? '$' : (p.pricing?.currency_name || '');
         const slug = p.slug;
