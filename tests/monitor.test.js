@@ -1,4 +1,4 @@
-const { pollWatches } = require('../src/monitor');
+const { pollWatches, firstPollDone } = require('../src/monitor');
 
 // Mock dependencies
 jest.mock('../src/depop', () => ({
@@ -10,6 +10,7 @@ jest.mock('../src/db', () => ({
   getSeenItemIds: jest.fn(),
   addSeenItems: jest.fn(),
   markSeeded: jest.fn(),
+  getNotifyChannel: jest.fn().mockReturnValue(null),
 }));
 
 const { searchDepop } = require('../src/depop');
@@ -26,14 +27,18 @@ function makeItem(id) {
     seller: 'testseller',
     url: `https://www.depop.com/products/${id}/`,
     sellerUrl: 'https://www.depop.com/testseller/',
+    dateCreated: new Date().toISOString(),
   };
 }
 
 function makeWatch(overrides = {}) {
   return {
     id: 1, query: 'nike', channel_id: 'chan1', user_id: 'user1',
+    guild_id: 'guild1',
     min_price: null, max_price: null, size: null, condition: null,
+    category: null,
     seeded: 1,
+    created_at: '2020-01-01 00:00:00',
     ...overrides,
   };
 }
@@ -48,8 +53,15 @@ function mockClient() {
   };
 }
 
+beforeEach(() => {
+  // Speed up the random delay between watches in tests
+  jest.spyOn(global, 'setTimeout').mockImplementation((fn) => fn());
+});
+
 afterEach(() => {
   jest.resetAllMocks();
+  jest.restoreAllMocks();
+  firstPollDone.clear();
 });
 
 describe('pollWatches', () => {
@@ -69,6 +81,7 @@ describe('pollWatches', () => {
 
   test('sends notifications for new items after seeding', async () => {
     const client = mockClient();
+    firstPollDone.add(1); // Already seeded this session
 
     db.getActiveWatches.mockReturnValue([makeWatch({ seeded: 1 })]);
     db.getSeenItemIds.mockReturnValue(new Set());
@@ -76,7 +89,7 @@ describe('pollWatches', () => {
 
     await pollWatches(client);
 
-    expect(searchDepop).toHaveBeenCalledWith('nike', { minPrice: null, maxPrice: null, size: null, condition: null });
+    expect(searchDepop).toHaveBeenCalledWith('nike', { minPrice: null, maxPrice: null, size: null, condition: null, category: null });
     expect(db.addSeenItems).toHaveBeenCalledWith(1, ['item1', 'item2']);
     expect(client._send).toHaveBeenCalledTimes(2);
 
@@ -89,6 +102,7 @@ describe('pollWatches', () => {
 
   test('skips already-seen items', async () => {
     const client = mockClient();
+    firstPollDone.add(1);
 
     db.getActiveWatches.mockReturnValue([makeWatch()]);
     db.getSeenItemIds.mockReturnValue(new Set(['item1']));
@@ -102,6 +116,7 @@ describe('pollWatches', () => {
 
   test('does nothing when all items are seen', async () => {
     const client = mockClient();
+    firstPollDone.add(1);
 
     db.getActiveWatches.mockReturnValue([makeWatch()]);
     db.getSeenItemIds.mockReturnValue(new Set(['item1', 'item2']));
@@ -124,6 +139,8 @@ describe('pollWatches', () => {
 
   test('continues polling other watches if one fails', async () => {
     const client = mockClient();
+    firstPollDone.add(1);
+    firstPollDone.add(2);
 
     db.getActiveWatches.mockReturnValue([
       makeWatch({ id: 1, query: 'fail' }),
@@ -142,6 +159,7 @@ describe('pollWatches', () => {
   });
 
   test('handles missing channel gracefully', async () => {
+    firstPollDone.add(1);
     const client = {
       channels: { fetch: jest.fn().mockResolvedValue(null) },
     };
