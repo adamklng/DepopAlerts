@@ -204,7 +204,7 @@ async function handleButton(interaction) {
 
     if (action === 'back') {
       // Rebuild the /list view
-      const watches = db.getWatchesByGuild(interaction.guildId);
+      const watches = db.getWatchesByUser(interaction.guildId, interaction.user.id);
       const active = watches.filter(w => w.active);
       const paused = watches.filter(w => !w.active);
       const embed = new EmbedBuilder()
@@ -241,7 +241,7 @@ async function handleButton(interaction) {
     }
 
     const guildId = interaction.guildId;
-    const watches = db.getWatchesByGuild(guildId);
+    const watches = db.getWatchesByUser(guildId, interaction.user.id);
     const active = watches.filter(w => w.active);
     const paused = watches.filter(w => !w.active);
 
@@ -622,7 +622,7 @@ async function handleSelectMenu(interaction) {
   if (customId === 'listedit') {
     const wId = parseInt(interaction.values[0]);
     const editWatch = db.getWatch(wId);
-    if (!editWatch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+    if (!editWatch || editWatch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
     console.log(`[Bot] Editing saved search "${editWatch.query}" (#${wId})`);
     // Create a pending copy so edits don't persist until Save
     const pendingId = createPendingSearch({
@@ -645,7 +645,10 @@ async function handleSelectMenu(interaction) {
     return;
   }
   if (customId === 'listresume') {
-    const ids = interaction.values.map(v => parseInt(v));
+    const ids = interaction.values.map(v => parseInt(v)).filter(id => {
+      const w = db.getWatch(id);
+      return w && w.user_id === interaction.user.id;
+    });
     for (const wId of ids) {
       db.activateWatch(wId);
     }
@@ -656,7 +659,10 @@ async function handleSelectMenu(interaction) {
     return;
   }
   if (customId === 'listpause') {
-    const ids = interaction.values.map(v => parseInt(v));
+    const ids = interaction.values.map(v => parseInt(v)).filter(id => {
+      const w = db.getWatch(id);
+      return w && w.user_id === interaction.user.id;
+    });
     for (const wId of ids) {
       db.pauseWatch(wId);
     }
@@ -667,7 +673,10 @@ async function handleSelectMenu(interaction) {
     return;
   }
   if (customId === 'listdelete') {
-    const ids = interaction.values.map(v => parseInt(v));
+    const ids = interaction.values.map(v => parseInt(v)).filter(id => {
+      const w = db.getWatch(id);
+      return w && w.user_id === interaction.user.id;
+    });
     const deleteNames = ids.map(id => { const w = db.getWatch(id); return `"${w?.query}" (#${id})`; });
     for (const wId of ids) {
       db.deleteWatch(wId, interaction.guildId);
