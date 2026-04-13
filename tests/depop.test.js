@@ -31,8 +31,9 @@ afterAll(async () => {
 
 // Helper: simulate RSC response handler to return no data (forces DOM fallback)
 function setupDomFallback(products) {
-  // The 'response' listener won't fire in mocks, so RSC extraction returns null
-  // Then it falls back to DOM scraping via page.evaluate
+  // First evaluate call is RSC extraction — return null to trigger DOM fallback
+  mockEvaluate.mockResolvedValueOnce(null);
+  // Second evaluate call is DOM scraping
   mockEvaluate.mockResolvedValueOnce(products);
 }
 
@@ -70,16 +71,18 @@ describe('searchDepop', () => {
     expect(results[1].imageUrl).toBeNull();
   });
 
-  test('passes filters as query params', async () => {
+  test('passes price and category filters as query params', async () => {
     setupDomFallback([]);
 
-    await searchDepop('jacket', { minPrice: 10, maxPrice: 50, size: 'M', condition: 'LIKE_NEW' });
+    await searchDepop('jacket', { minPrice: 10, maxPrice: 50, category: 'male' });
 
     const calledUrl = mockPage.goto.mock.calls[0][0];
     expect(calledUrl).toContain('priceMin=10');
     expect(calledUrl).toContain('priceMax=50');
-    expect(calledUrl).toContain('sizes=M');
-    expect(calledUrl).toContain('itemConditions=LIKE_NEW');
+    expect(calledUrl).toContain('gender=male');
+    // Size and condition are filtered client-side, not in URL
+    expect(calledUrl).not.toContain('sizes');
+    expect(calledUrl).not.toContain('itemConditions');
   });
 
   test('handles empty results', async () => {

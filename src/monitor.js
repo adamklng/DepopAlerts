@@ -161,4 +161,4 @@ function startPolling(client, intervalMs) {
   setInterval(poll, intervalMs);
 }
 
-module.exports = { startPolling, pollWatches };
+module.exports = { startPolling, pollWatches, firstPollDone };
