@@ -49,11 +49,12 @@ async function checkWatch(client, watch) {
   // Client-side size filtering
   if (watch.size) {
     const beforeSize = items.length;
-    const wantedSizes = watch.size.split(',').map(s => s.trim().toLowerCase());
+    const wantedSizes = new Set(watch.size.split(',').map(s => s.trim().toLowerCase()));
     items = items.filter(item => {
       if (!item.size) return false;
-      const itemSize = item.size.toLowerCase();
-      return wantedSizes.some(ws => itemSize.includes(ws));
+      // Split item sizes (e.g. "M, L") and check for exact match
+      const itemSizes = item.size.split(',').map(s => s.trim().toLowerCase());
+      return itemSizes.some(is => wantedSizes.has(is));
     });
     console.log(`[Monitor] Watch #${watch.id}: size filter ${beforeSize} -> ${items.length} (want: ${watch.size})`);
     if (!items.length) return;
