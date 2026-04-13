@@ -616,8 +616,15 @@ async function handleModal(interaction) {
   const watch = getWatch(watchId);
   if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
 
-  const minPrice = parseFloat(interaction.fields.getTextInputValue('min_price')) || null;
-  const maxPrice = parseFloat(interaction.fields.getTextInputValue('max_price')) || null;
+  const rawMin = interaction.fields.getTextInputValue('min_price').trim();
+  const rawMax = interaction.fields.getTextInputValue('max_price').trim();
+  const minPrice = rawMin ? parseFloat(rawMin) : null;
+  const maxPrice = rawMax ? parseFloat(rawMax) : null;
+
+  if ((minPrice !== null && (isNaN(minPrice) || minPrice < 0)) ||
+      (maxPrice !== null && (isNaN(maxPrice) || maxPrice < 0))) {
+    return interaction.reply({ content: 'Please enter valid positive numbers for price.', flags: MessageFlags.Ephemeral });
+  }
 
   updateFilters(watchId, {
     minPrice,
