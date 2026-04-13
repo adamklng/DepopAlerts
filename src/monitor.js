@@ -5,7 +5,17 @@ const db = require('./db');
 // Track which watches have had their first poll this session
 const firstPollDone = new Set();
 
+// Stats tracking
+const stats = {
+  startedAt: Date.now(),
+  lastPollAt: null,
+  lastPollDurationMs: null,
+  totalPolls: 0,
+  totalNotifications: 0,
+};
+
 async function pollWatches(client) {
+  const pollStart = Date.now();
   const watches = db.getActiveWatches();
 
   for (const watch of watches) {
@@ -19,6 +29,10 @@ async function pollWatches(client) {
       await new Promise(r => setTimeout(r, 2000 + Math.random() * 3000));
     }
   }
+
+  stats.totalPolls++;
+  stats.lastPollAt = Date.now();
+  stats.lastPollDurationMs = Date.now() - pollStart;
 }
 
 async function checkWatch(client, watch) {
@@ -116,6 +130,7 @@ async function checkWatch(client, watch) {
       embeds: [embed],
       components: [row],
     });
+    stats.totalNotifications++;
   }
 }
 
@@ -164,4 +179,4 @@ function startPolling(client, intervalMs) {
   setInterval(poll, intervalMs);
 }
 
-module.exports = { startPolling, pollWatches, firstPollDone };
+module.exports = { startPolling, pollWatches, firstPollDone, stats };

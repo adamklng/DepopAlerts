@@ -1,6 +1,7 @@
-const { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const db = require('./db');
 const { buildWatchMessage, createPendingSearch } = require('./buttons');
+const { stats } = require('./monitor');
 
 const watchCommand = new SlashCommandBuilder()
   .setName('watch')
@@ -76,6 +77,13 @@ const editCommand = new SlashCommandBuilder()
   .setDescription('Edit a saved search')
   .addStringOption(opt =>
     opt.setName('search').setDescription('Name of the saved search').setRequired(true).setAutocomplete(true)
+  );
+
+const statusCommand = new SlashCommandBuilder()
+  .setName('status')
+  .setDescription('View bot status and your saved search stats')
+  .addBooleanOption(opt =>
+    opt.setName('admin').setDescription('Show full server stats (admin only)').setRequired(false)
   );
 
 const setchannelCommand = new SlashCommandBuilder()
@@ -227,6 +235,55 @@ async function handleCommand(interaction) {
 
       const row = new ActionRowBuilder().addComponents(buttons);
       await interaction.reply({ embeds: [embed], components: [row] });
+    } else if (commandName === 'status') {
+      const isAdmin = interaction.options.getBoolean('admin');
+      const uptime = Math.floor((Date.now() - stats.startedAt) / 1000);
+      const hours = Math.floor(uptime / 3600);
+      const mins = Math.floor((uptime % 3600) / 60);
+      const secs = uptime % 60;
+      const uptimeStr = `${hours}h ${mins}m ${secs}s`;
+
+      if (isAdmin) {
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+          return interaction.reply({ content: 'Admin only.', flags: MessageFlags.Ephemeral });
+        }
+        const allWatches = db.getWatchesByGuild(interaction.guildId);
+        const active = allWatches.filter(w => w.active).length;
+        const paused = allWatches.filter(w => !w.active).length;
+        const users = new Set(allWatches.map(w => w.user_id)).size;
+        const lastPoll = stats.lastPollAt ? `<t:${Math.floor(stats.lastPollAt / 1000)}:R>` : 'Never';
+        const pollSpeed = stats.lastPollDurationMs ? `${(stats.lastPollDurationMs / 1000).toFixed(1)}s` : 'N/A';
+
+        const embed = new EmbedBuilder()
+          .setTitle('Server Status')
+          .setColor(0xff2300)
+          .addFields(
+            { name: 'Uptime', value: uptimeStr, inline: true },
+            { name: 'Total Polls', value: String(stats.totalPolls), inline: true },
+            { name: 'Last Poll', value: lastPoll, inline: true },
+            { name: 'Poll Speed', value: pollSpeed, inline: true },
+            { name: 'Notifications Sent', value: String(stats.totalNotifications), inline: true },
+            { name: 'Users', value: String(users), inline: true },
+            { name: 'Active Searches', value: String(active), inline: true },
+            { name: 'Paused Searches', value: String(paused), inline: true },
+          );
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      } else {
+        const myWatches = db.getWatchesByUser(interaction.guildId, interaction.user.id);
+        const active = myWatches.filter(w => w.active).length;
+        const paused = myWatches.filter(w => !w.active).length;
+
+        const embed = new EmbedBuilder()
+          .setTitle('Your Status')
+          .setColor(0xff2300)
+          .addFields(
+            { name: 'Active Searches', value: String(active), inline: true },
+            { name: 'Paused Searches', value: String(paused), inline: true },
+            { name: 'Bot Uptime', value: uptimeStr, inline: true },
+          );
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      }
+
     } else if (commandName === 'setchannel') {
       const channel = interaction.options.getChannel('channel');
       db.setNotifyChannel(interaction.guildId, channel.id);
@@ -244,7 +301,7 @@ async function handleCommand(interaction) {
 }
 
 module.exports = {
-  commands: [watchCommand, listCommand, pauseCommand, resumeCommand, deleteCommand, editCommand, setchannelCommand],
+  commands: [watchCommand, listCommand, pauseCommand, resumeCommand, deleteCommand, editCommand, statusCommand, setchannelCommand],
   handleCommand,
   handleAutocomplete,
 };
