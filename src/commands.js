@@ -97,7 +97,7 @@ function handleAutocomplete(interaction) {
   const choices = filtered
     .filter(w => w.query.toLowerCase().includes(focused))
     .slice(0, 25)
-    .map(w => ({ name: `${w.query} (#${w.id})`, value: String(w.id) }));
+    .map(w => ({ name: `${w.query.slice(0, 90)} (#${w.id})`, value: String(w.id) }));
 
   interaction.respond(choices).catch(() => {});
 }
@@ -207,7 +207,7 @@ async function handleCommand(interaction) {
         );
 
       const searchOptions = watches.map(w => ({
-        label: `#${w.id} \u2014 "${w.query}"`,
+        label: `#${w.id} \u2014 "${w.query.slice(0, 85)}"`,
         value: String(w.id),
         description: w.active ? 'Active' : 'Paused',
       }));

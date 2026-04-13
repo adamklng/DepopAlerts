@@ -95,7 +95,8 @@ function buildWatchMessage(watchId) {
   if (!watch) return { content: 'Saved search not found.', embeds: [], components: [] };
 
   const embed = new EmbedBuilder()
-    .setTitle(`"${watch.query}"`)
+    .setTitle(`"${watch.query.slice(0, 250)}"`)
+
     .setColor(0xff2300)
     .setFooter({ text: 'Set your filters below, then hit Save & Start' });
 
@@ -216,7 +217,7 @@ async function handleButton(interaction) {
             if (w.size) filters.push(`Size: ${w.size}`);
             const status = w.active ? '\uD83D\uDFE2' : '\u23F8\uFE0F';
             return `${status} **#${w.id}** \u2014 "${w.query}" ${filters.length ? `(${filters.join(', ')})` : ''}`;
-          }).join('\n') || 'None'
+          }).join('\n').slice(0, 4096) || 'None'
         );
       const buttons = [];
       buttons.push(new ButtonBuilder().setCustomId('listaction_edit').setLabel('Edit').setStyle(ButtonStyle.Primary));
@@ -246,22 +247,22 @@ async function handleButton(interaction) {
 
     let options, placeholder, menuId, maxVals;
     if (action === 'edit') {
-      options = watches.map(w => ({ label: `${w.query} (#${w.id})`, value: String(w.id), description: w.active ? 'Active' : 'Paused' }));
+      options = watches.map(w => ({ label: `${w.query.slice(0, 90)} (#${w.id})`, value: String(w.id), description: w.active ? 'Active' : 'Paused' }));
       placeholder = 'Select a saved search to edit...';
       menuId = 'listedit';
       maxVals = 1;
     } else if (action === 'pause') {
-      options = active.map(w => ({ label: `${w.query} (#${w.id})`, value: String(w.id) }));
+      options = active.map(w => ({ label: `${w.query.slice(0, 90)} (#${w.id})`, value: String(w.id) }));
       placeholder = 'Select saved searches to pause...';
       menuId = 'listpause';
       maxVals = options.length;
     } else if (action === 'resume') {
-      options = paused.map(w => ({ label: `${w.query} (#${w.id})`, value: String(w.id) }));
+      options = paused.map(w => ({ label: `${w.query.slice(0, 90)} (#${w.id})`, value: String(w.id) }));
       placeholder = 'Select saved searches to resume...';
       menuId = 'listresume';
       maxVals = options.length;
     } else if (action === 'delete') {
-      options = watches.map(w => ({ label: `${w.query} (#${w.id})`, value: String(w.id) }));
+      options = watches.map(w => ({ label: `${w.query.slice(0, 90)} (#${w.id})`, value: String(w.id) }));
       placeholder = 'Select saved searches to delete...';
       menuId = 'listdelete';
       maxVals = options.length;
