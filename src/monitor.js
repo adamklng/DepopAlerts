@@ -35,7 +35,9 @@ async function checkWatch(client, watch) {
 
   // Only notify for items created after the watch was activated (with 3 min grace period)
   // SQLite CURRENT_TIMESTAMP is UTC — append Z so JS parses it as UTC
-  const watchCreatedAt = new Date(watch.created_at + 'Z').getTime() - (3 * 60 * 1000);
+  const watchCreatedAt = watch.created_at
+    ? new Date(watch.created_at + 'Z').getTime() - (3 * 60 * 1000)
+    : 0;
   const beforeDateFilter = items.length;
   items = items.filter(item => {
     if (!item.dateCreated) return true;

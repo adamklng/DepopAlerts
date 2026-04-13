@@ -196,7 +196,10 @@ async function handleCommand(interaction) {
         .setDescription(
           watches.map(w => {
             const filters = [];
-            if (w.category) filters.push(`Category: ${w.category.replace('||', ' \u203A ')}`);
+            if (w.category) {
+              const cat = w.category === 'male' ? 'All Men' : w.category === 'female' ? 'All Women' : w.category.replace('.', ' \u203A ');
+              filters.push(`Category: ${cat}`);
+            }
             if (w.min_price) filters.push(`Min: $${w.min_price}`);
             if (w.max_price) filters.push(`Max: $${w.max_price}`);
             if (w.size) filters.push(`Size: ${w.size}`);
