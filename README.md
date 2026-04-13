@@ -110,6 +110,27 @@ Then use the buttons to set filters and hit **Save & Start**.
 - **better-sqlite3** — local database
 - **Jest** — testing
 
+## Roadmap
+
+If you want to work on one of these, open an issue first to avoid duplicate work.
+
+- [ ] Per-user saved search limit to prevent bot overload
+- [ ] `/status` command — active watches, last poll time, uptime
+- [ ] Richer notification embeds — multiple images, brand name, time since posted
+- [ ] DM notifications option
+- [ ] Proxy rotation for high-volume usage
+- [ ] Retry logic with exponential backoff for failed scrapes
+- [ ] Auto-build Docker image via GitHub Actions on release
+- [ ] Depop size ID mapping for server-side size filtering
+- [ ] More granular category filters (e.g. Men > Bottoms > Jeans)
+
+## Known Limitations
+
+- Depop can change their HTML/RSC format at any time, which would break scraping
+- Size and condition filters are client-side — results may be fewer than 24 after filtering
+- Depop caches results for less popular queries, so "newly listed" may lag behind
+- Single Puppeteer instance — many concurrent watches will slow down polling
+
 ## License
 
 [MIT](LICENSE)
