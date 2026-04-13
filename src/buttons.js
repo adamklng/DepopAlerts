@@ -235,7 +235,7 @@ async function handleButton(interaction) {
         await interaction.message.delete();
         await interaction.deferUpdate().catch(() => {});
       } catch {
-        await interaction.update({ content: 'Closed.', embeds: [], components: [] }).catch(() => {});
+        await interaction.update({ content: 'Changes Cancelled.', embeds: [], components: [] }).catch(() => {});
       }
       return;
     }
@@ -353,7 +353,7 @@ async function handleButton(interaction) {
         await interaction.message.delete();
         await interaction.deferUpdate().catch(() => {});
       } catch {
-        await interaction.update({ content: 'Closed.', embeds: [], components: [] }).catch(() => {});
+        await interaction.update({ content: 'Changes Cancelled.', embeds: [], components: [] }).catch(() => {});
       }
       return;
     case 'category':
