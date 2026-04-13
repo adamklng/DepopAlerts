@@ -104,6 +104,8 @@ Create a new Stack → point it to the `docker-compose.yml` from this repo, or u
 | `/pause <search>` | Pause a saved search (autocomplete) |
 | `/resume <search>` | Resume a paused search (autocomplete) |
 | `/delete <search>` | Delete a saved search (autocomplete) |
+| `/status` | View your saved search stats and bot uptime |
+| `/status admin:true` | View full server stats — admin only |
 | `/setchannel <channel>` | Set the notification channel for the server |
 
 ### Quick start example
@@ -140,7 +142,6 @@ Then use the buttons to set filters and hit **Save & Start**.
 If you want to work on one of these, open an issue first to avoid duplicate work.
 
 - [ ] Per-user saved search limit to prevent bot overload
-- [ ] `/status` command — active watches, last poll time, uptime
 - [ ] Richer notification embeds — multiple images, brand name, time since posted
 - [ ] DM notifications option
 - [ ] Proxy rotation for high-volume usage
