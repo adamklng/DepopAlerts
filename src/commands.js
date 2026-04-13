@@ -86,7 +86,7 @@ const setchannelCommand = new SlashCommandBuilder()
   );
 
 function handleAutocomplete(interaction) {
-  const watches = db.getWatchesByGuild(interaction.guildId);
+  const watches = db.getWatchesByUser(interaction.guildId, interaction.user.id);
   const focused = interaction.options.getFocused().toLowerCase();
   const commandName = interaction.commandName;
 
@@ -138,7 +138,7 @@ async function handleCommand(interaction) {
     } else if (commandName === 'pause') {
       const wId = parseInt(interaction.options.getString('search'));
       const watch = db.getWatch(wId);
-      if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+      if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
       db.pauseWatch(wId);
       console.log(`[Bot] Paused saved search "${watch.query}" (#${wId})`);
       await interaction.reply({ content: `Paused **${watch.query}** (#${wId})`, flags: MessageFlags.Ephemeral });
@@ -146,7 +146,7 @@ async function handleCommand(interaction) {
     } else if (commandName === 'resume') {
       const wId = parseInt(interaction.options.getString('search'));
       const watch = db.getWatch(wId);
-      if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+      if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
       db.activateWatch(wId);
       console.log(`[Bot] Resumed saved search "${watch.query}" (#${wId})`);
       await interaction.reply({ content: `Resumed **${watch.query}** (#${wId})`, flags: MessageFlags.Ephemeral });
@@ -154,7 +154,7 @@ async function handleCommand(interaction) {
     } else if (commandName === 'delete') {
       const wId = parseInt(interaction.options.getString('search'));
       const watch = db.getWatch(wId);
-      if (!watch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+      if (!watch || watch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
       const name = watch.query;
       db.deleteWatch(wId, interaction.guildId);
       console.log(`[Bot] Deleted saved search "${name}" (#${wId})`);
@@ -163,7 +163,7 @@ async function handleCommand(interaction) {
     } else if (commandName === 'edit') {
       const wId = parseInt(interaction.options.getString('search'));
       const editWatch = db.getWatch(wId);
-      if (!editWatch) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
+      if (!editWatch || editWatch.user_id !== interaction.user.id) return interaction.reply({ content: 'Saved search not found.', flags: MessageFlags.Ephemeral });
       console.log(`[Bot] Editing saved search "${editWatch.query}" (#${wId})`);
       const { createPendingSearch: cps, getWatch: gw, buildWatchMessage: bwm } = require('./buttons');
       const pendingId = cps({
@@ -184,7 +184,7 @@ async function handleCommand(interaction) {
       await interaction.reply({ ...msg, flags: MessageFlags.Ephemeral });
 
     } else if (commandName === 'list') {
-      const watches = db.getWatchesByGuild(interaction.guildId);
+      const watches = db.getWatchesByUser(interaction.guildId, interaction.user.id);
 
       if (!watches.length) {
         return interaction.reply({ content: 'No saved searches in this server.', flags: MessageFlags.Ephemeral });

@@ -52,6 +52,7 @@ const stmts = {
   getWatch: db.prepare(`SELECT * FROM watches WHERE id = ?`),
   getWatchesByChannel: db.prepare(`SELECT * FROM watches WHERE channel_id = ?`),
   getWatchesByGuild: db.prepare(`SELECT * FROM watches WHERE guild_id = ?`),
+  getWatchesByUser: db.prepare(`SELECT * FROM watches WHERE guild_id = ? AND user_id = ?`),
   getActiveWatches: db.prepare(`SELECT * FROM watches WHERE active = 1`),
   activateWatch: db.prepare(`UPDATE watches SET active = 1 WHERE id = ?`),
   pauseWatch: db.prepare(`UPDATE watches SET active = 0 WHERE id = ?`),
@@ -88,6 +89,9 @@ module.exports = {
   },
   getWatchesByGuild(guildId) {
     return stmts.getWatchesByGuild.all(guildId);
+  },
+  getWatchesByUser(guildId, userId) {
+    return stmts.getWatchesByUser.all(guildId, userId);
   },
   getActiveWatches() {
     return stmts.getActiveWatches.all();
