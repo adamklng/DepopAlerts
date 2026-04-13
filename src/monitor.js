@@ -93,7 +93,10 @@ async function checkWatch(client, watch) {
 
   // Use notification channel if set, otherwise fall back to the watch's channel
   const notifyChannelId = db.getNotifyChannel(watch.guild_id) || watch.channel_id;
-  const channel = await client.channels.fetch(notifyChannelId).catch(() => null);
+  const channel = await client.channels.fetch(notifyChannelId).catch(err => {
+    console.error(`[Monitor] Failed to fetch channel ${notifyChannelId}:`, err.message);
+    return null;
+  });
   if (!channel) return;
 
   for (const item of newItems) {
@@ -137,12 +140,25 @@ function buildItemEmbed(item, watch) {
   return embed;
 }
 
+let isPolling = false;
+
 function startPolling(client, intervalMs) {
   console.log(`Polling every ${intervalMs / 1000}s`);
 
-  // Run once immediately, then on interval
-  pollWatches(client);
-  setInterval(() => pollWatches(client), intervalMs);
+  const poll = async () => {
+    if (isPolling) return;
+    isPolling = true;
+    try {
+      await pollWatches(client);
+    } catch (err) {
+      console.error('[Monitor] Poll failed:', err.message);
+    } finally {
+      isPolling = false;
+    }
+  };
+
+  poll();
+  setInterval(poll, intervalMs);
 }
 
 module.exports = { startPolling, pollWatches };
