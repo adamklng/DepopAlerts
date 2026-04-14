@@ -99,7 +99,7 @@ async function searchDepop(query, filters = {}) {
           description: '',
           price: price ? `${currency}${price}` : 'N/A',
           size: p.sizes?.join(', ') || null,
-          imageUrl: p.preview?.['480'] || p.preview?.['320'] || null,
+          imageUrl: p.preview?.['640'] || p.preview?.['480'] || p.preview?.['320'] || null,
           seller,
           sellerUrl: `https://www.depop.com/${seller}/`,
           url: `https://www.depop.com/products/${slug}/`,
