@@ -359,8 +359,6 @@ async function handleButton(interaction) {
     case 'category':
       return showCategoryMenu(interaction, watchId);
     case 'price':
-      return showPriceMenu(interaction, watchId);
-    case 'setprice':
       return showPriceModal(interaction, watchId);
     case 'size':
       return showSizeCategoryMenu(interaction, watchId);
@@ -377,20 +375,6 @@ async function handleButton(interaction) {
   }
 }
 
-async function showPriceMenu(interaction, watchId) {
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`setprice_${watchId}`).setLabel('Set Price').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId(`priceclear_${watchId}`).setLabel('Clear Price').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId(`back_${watchId}`).setLabel('Back').setStyle(ButtonStyle.Secondary),
-  );
-
-  await interaction.update({
-    content: 'Set or clear price range:',
-    embeds: [],
-    components: [row],
-  });
-}
-
 async function showPriceModal(interaction, watchId) {
   const modal = new ModalBuilder()
     .setCustomId(`pricemodal_${watchId}`)
@@ -398,14 +382,14 @@ async function showPriceModal(interaction, watchId) {
 
   const minInput = new TextInputBuilder()
     .setCustomId('min_price')
-    .setLabel('Minimum Price (leave empty for no min)')
+    .setLabel('Minimum Price (leave empty to clear)')
     .setStyle(TextInputStyle.Short)
     .setRequired(false)
     .setPlaceholder('e.g. 10');
 
   const maxInput = new TextInputBuilder()
     .setCustomId('max_price')
-    .setLabel('Maximum Price (leave empty for no max)')
+    .setLabel('Maximum Price (leave empty to clear)')
     .setStyle(TextInputStyle.Short)
     .setRequired(false)
     .setPlaceholder('e.g. 100');
@@ -608,11 +592,13 @@ async function handleModal(interaction) {
     category: watch.category,
   });
 
-  await interaction.deferUpdate().catch(async () => {
-    await interaction.reply({ content: 'Price updated!', flags: MessageFlags.Ephemeral });
-  });
+  // Modal triggered from a button has interaction.message — update in place just like other filters
+  if (interaction.message) {
+    await interaction.update(buildWatchMessage(watchId));
+  } else {
+    await interaction.reply({ ...buildWatchMessage(watchId), flags: MessageFlags.Ephemeral });
+  }
   updateOriginalMessage(interaction, watchId);
-  try { await interaction.deleteReply(); } catch {}
 }
 
 async function handleSelectMenu(interaction) {
