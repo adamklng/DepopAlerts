@@ -142,7 +142,6 @@ function buildItemEmbed(item, watch) {
     .setDescription(item.description || null)
     .addFields(
       { name: 'Price', value: item.price, inline: true },
-      { name: 'Seller', value: `[${item.seller}](${item.sellerUrl})`, inline: true },
     )
     .setFooter({ text: `Watch #${watch.id} · ${watch.query}` })
     .setTimestamp();
