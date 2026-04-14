@@ -86,6 +86,11 @@ const statusCommand = new SlashCommandBuilder()
     opt.setName('admin').setDescription('Show full server stats (admin only)').setRequired(false)
   );
 
+const purgeCommand = new SlashCommandBuilder()
+  .setName('purge')
+  .setDescription('Delete all bot messages in this channel')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
+
 const setchannelCommand = new SlashCommandBuilder()
   .setName('setchannel')
   .setDescription('Set the channel where new item notifications are sent')
@@ -284,6 +289,31 @@ async function handleCommand(interaction) {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       }
 
+    } else if (commandName === 'purge') {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      const channel = interaction.channel;
+      let deleted = 0;
+      let lastId;
+
+      // Fetch and delete in batches (Discord API limit: 100 per fetch, 14 day limit)
+      while (true) {
+        const options = { limit: 100 };
+        if (lastId) options.before = lastId;
+        const messages = await channel.messages.fetch(options);
+        if (!messages.size) break;
+
+        const botMessages = messages.filter(m => m.author.id === interaction.client.user.id);
+        for (const msg of botMessages.values()) {
+          try { await msg.delete(); deleted++; } catch {}
+        }
+
+        lastId = messages.last().id;
+        if (messages.size < 100) break;
+      }
+
+      await interaction.editReply({ content: `Deleted ${deleted} bot message${deleted !== 1 ? 's' : ''}.` });
+      console.log(`[Bot] Purged ${deleted} messages in #${channel.name}`);
+
     } else if (commandName === 'setchannel') {
       const channel = interaction.options.getChannel('channel');
       db.setNotifyChannel(interaction.guildId, channel.id);
@@ -301,7 +331,7 @@ async function handleCommand(interaction) {
 }
 
 module.exports = {
-  commands: [watchCommand, listCommand, pauseCommand, resumeCommand, deleteCommand, editCommand, statusCommand, setchannelCommand],
+  commands: [watchCommand, listCommand, pauseCommand, resumeCommand, deleteCommand, editCommand, statusCommand, purgeCommand, setchannelCommand],
   handleCommand,
   handleAutocomplete,
 };
