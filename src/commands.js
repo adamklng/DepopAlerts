@@ -294,8 +294,8 @@ async function handleCommand(interaction) {
       const channel = interaction.channel;
       let deleted = 0;
       let lastId;
+      const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
 
-      // Fetch and delete in batches (Discord API limit: 100 per fetch, 14 day limit)
       while (true) {
         const options = { limit: 100 };
         if (lastId) options.before = lastId;
@@ -303,7 +303,18 @@ async function handleCommand(interaction) {
         if (!messages.size) break;
 
         const botMessages = messages.filter(m => m.author.id === interaction.client.user.id);
-        for (const msg of botMessages.values()) {
+        const recent = botMessages.filter(m => m.createdTimestamp > fourteenDaysAgo);
+        const old = botMessages.filter(m => m.createdTimestamp <= fourteenDaysAgo);
+
+        // Bulk delete recent messages (under 14 days)
+        if (recent.size > 1) {
+          try { await channel.bulkDelete(recent); deleted += recent.size; } catch {}
+        } else if (recent.size === 1) {
+          try { await recent.first().delete(); deleted++; } catch {}
+        }
+
+        // Old messages must be deleted one by one
+        for (const msg of old.values()) {
           try { await msg.delete(); deleted++; } catch {}
         }
 
