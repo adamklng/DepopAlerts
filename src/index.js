@@ -1,26 +1,7 @@
 require('dotenv').config();
 
-// Discord webhook logger — buffers logs and sends every 5 seconds
-const LOG_WEBHOOK = 'https://discord.com/api/webhooks/1493758722495873175/Le5Qoib4th4iTUJvxvQKZqSlWQwSEh0C2MiIvc-oxJVmuGxuKpZhzQvldiIaGEcSymw0';
-(() => {
-  const origLog = console.log;
-  const origError = console.error;
-  let buffer = '';
-
-  setInterval(async () => {
-    if (!buffer) return;
-    const msg = buffer.slice(0, 1900);
-    buffer = '';
-    await fetch(LOG_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: '```\n' + msg + '\n```' }),
-    }).catch(() => {});
-  }, 5000);
-
-  console.log = (...args) => { origLog(...args); buffer += args.join(' ') + '\n'; };
-  console.error = (...args) => { origError(...args); buffer += '[ERROR] ' + args.join(' ') + '\n'; };
-})();
+// Discord webhook logger — disabled for now
+// To enable: set LOG_WEBHOOK and uncomment the block below
 
 const { Client, GatewayIntentBits, Events, MessageFlags } = require('discord.js');
 const { handleCommand, handleAutocomplete } = require('./commands');
