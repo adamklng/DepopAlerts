@@ -1,7 +1,5 @@
 require('dotenv').config();
 
-// Discord webhook logger — disabled for now
-// To enable: set LOG_WEBHOOK and uncomment the block below
 
 const { Client, GatewayIntentBits, Events, MessageFlags } = require('discord.js');
 const { handleCommand, handleAutocomplete } = require('./commands');
